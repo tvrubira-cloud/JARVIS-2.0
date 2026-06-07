@@ -1,0 +1,32 @@
+{
+  "identity": {
+    "name": {
+      "value": "Guaraci"
+    }
+  },
+  "preferences": {},
+  "projects": {},
+  "relationships": {},
+  "wishes": {},
+  "notes": {
+    "labor_law_summary": {
+      "value": "Core concepts, important topics, employee rights, employer responsibilities, and recent trends of labor law."
+    },
+    "alimony_summary": {
+      "value": "Key information about alimony (pensão alimentícia) saved."
+    },
+    "traffic_law_summary": {
+      "value": "Main Brazilian traffic law, common violations, and traffic signs identified."
+    },
+    "general_knowledge_foundation": {
+      "value": "Broad general knowledge foundation established across history, science, geography, arts, and current events."
+    }
+  },
+  "routines": {},
+  "devices": {},
+  "_meta": {
+    "created_at": "2026-06-07T14:48:32.397374",
+    "last_updated": "2026-06-07T18:24:52.884052",
+    "version": "2.0"
+  }
+}
