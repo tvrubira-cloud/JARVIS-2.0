@@ -36,41 +36,6 @@ from actions.email_action        import email_action
 from actions.calendar_action     import calendar_action
 
 
-def _auto_extract_memory(text: str) -> None:
-    """Extrai e salva automaticamente informações pessoais do que o usuário falou."""
-    import re
-    from datetime import datetime
-    updates = {}
-    now = datetime.now().isoformat()
-
-    def _save(cat, key, val):
-        updates.setdefault(cat, {})[key] = {"value": val, "updated_at": now}
-
-    m = re.search(r"(?:meu nome é|me chamo|sou o|sou a|my name is)\s+(\w+)", text, re.I)
-    if m: _save("identity", "name", m.group(1))
-
-    m = re.search(r"(?:tenho|have)\s+(\d{1,2})\s+(?:anos|years)", text, re.I)
-    if m: _save("identity", "age", m.group(1))
-
-    m = re.search(r"(?:moro em|vivo em|sou de|live in)\s+([\w\s]+?)(?:\.|,|$)", text, re.I)
-    if m: _save("identity", "city", m.group(1).strip())
-
-    m = re.search(r"(?:gosto de jogar|jogo|favorite game is)\s+([\w\s]+?)(?:\.|,|$)", text, re.I)
-    if m: _save("preferences", "favorite_game", m.group(1).strip())
-
-    m = re.search(r"(?:lembra que|lembre que|anota que|não esqueça que|remember that|note that)\s+(.+?)(?:\.|$)", text, re.I)
-    if m: _save("notes", f"note_{datetime.now().strftime('%H%M%S')}", m.group(1).strip())
-
-    if updates:
-        try:
-            update_memory(updates)
-            for cat, fields in updates.items():
-                for key, val in fields.items():
-                    print(f"[Memory] 💾 auto: {cat}/{key} = {val['value']}")
-        except Exception as e:
-            print(f"[Memory] ❌ {e}")
-
-
 def get_base_dir():
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
@@ -516,90 +481,6 @@ TOOL_DECLARATIONS = [
             "required": ["category", "key", "value"]
         }
     },
-    {
-        "name": "pc_control_advanced",
-        "description": "Controle avançado do PC Windows: listar/matar processos, info do sistema (CPU/RAM/disco/bateria), gerenciar programas de inicialização, tarefas agendadas, conexões de rede, área de transferência, janelas abertas, variáveis de ambiente, limpeza de disco, apps instalados.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action":           {"type": "STRING",  "description": "list_processes | kill_process | system_info | list_startup | manage_startup | scheduled_tasks | network_info | clipboard | window_manager | run_as_admin | env_variable | disk_cleanup | installed_apps"},
-                "filter":           {"type": "STRING",  "description": "Filtro de nome para list_processes"},
-                "target":           {"type": "STRING",  "description": "Nome ou PID do processo para kill_process"},
-                "name":             {"type": "STRING",  "description": "Nome para manage_startup ou env_variable"},
-                "startup_action":   {"type": "STRING",  "description": "disable"},
-                "task_action":      {"type": "STRING",  "description": "list | run | stop | create | delete"},
-                "task_name":        {"type": "STRING",  "description": "Nome da tarefa agendada"},
-                "command":          {"type": "STRING",  "description": "Comando para executar"},
-                "trigger_time":     {"type": "STRING",  "description": "Hora HH:MM"},
-                "clipboard_action": {"type": "STRING",  "description": "read | write | clear"},
-                "text":             {"type": "STRING",  "description": "Texto para clipboard"},
-                "window_action":    {"type": "STRING",  "description": "list | minimize | maximize | close"},
-                "title":            {"type": "STRING",  "description": "Título da janela"},
-                "env_action":       {"type": "STRING",  "description": "get | set | list"},
-                "value":            {"type": "STRING",  "description": "Valor"},
-                "drive":            {"type": "STRING",  "description": "Letra do drive (padrão: C)"},
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "email_action",
-        "description": "Gerencia emails: enviar, ler emails recentes, buscar por assunto, ver estatísticas. Suporta Gmail e Outlook.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action":      {"type": "STRING",  "description": "send | read | stats"},
-                "to":          {"type": "STRING",  "description": "Destinatário"},
-                "subject":     {"type": "STRING",  "description": "Assunto"},
-                "body":        {"type": "STRING",  "description": "Corpo do email"},
-                "cc":          {"type": "STRING",  "description": "Cópia"},
-                "attachment":  {"type": "STRING",  "description": "Caminho do anexo"},
-                "folder":      {"type": "STRING",  "description": "Pasta (padrão: INBOX)"},
-                "count":       {"type": "INTEGER", "description": "Número de emails"},
-                "unread_only": {"type": "BOOLEAN", "description": "Apenas não lidos"},
-                "search":      {"type": "STRING",  "description": "Buscar por assunto"},
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "calendar_action",
-        "description": "Gerencia calendário: listar eventos, ver agenda de hoje, criar e deletar eventos.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action":           {"type": "STRING",  "description": "list | today | create | delete"},
-                "backend":          {"type": "STRING",  "description": "local | outlook"},
-                "title":            {"type": "STRING",  "description": "Título do evento"},
-                "date":             {"type": "STRING",  "description": "Data YYYY-MM-DD"},
-                "time":             {"type": "STRING",  "description": "Hora HH:MM"},
-                "end_time":         {"type": "STRING",  "description": "Hora de fim"},
-                "location":         {"type": "STRING",  "description": "Local"},
-                "notes":            {"type": "STRING",  "description": "Notas"},
-                "days":             {"type": "INTEGER", "description": "Dias para listar"},
-                "filter":           {"type": "STRING",  "description": "Filtro de texto"},
-                "event_id":         {"type": "INTEGER", "description": "ID para deletar"},
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "memory_manager",
-        "description": "Gerencia memória persistente: buscar, deletar, ver resumo, exportar, histórico de conversas.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action":   {"type": "STRING",  "description": "search | delete | summary | export | import | history | save"},
-                "query":    {"type": "STRING",  "description": "Busca por palavras-chave"},
-                "category": {"type": "STRING",  "description": "identity | preferences | projects | relationships | wishes | routines | devices | notes"},
-                "key":      {"type": "STRING",  "description": "Chave da entrada"},
-                "value":    {"type": "STRING",  "description": "Valor para salvar"},
-                "path":     {"type": "STRING",  "description": "Caminho para export/import"},
-                "count":    {"type": "INTEGER", "description": "Número de turnos do histórico"},
-            },
-            "required": ["action"]
-        }
-    },
 ]
 
 class JarvisLive:
@@ -795,23 +676,6 @@ class JarvisLive:
                 r = await loop.run_in_executor(None, lambda: flight_finder(parameters=args, player=self.ui))
                 result = r or "Done."
 
-            elif name == "pc_control_advanced":
-                r = await loop.run_in_executor(None, lambda: pc_control_advanced(parameters=args, player=self.ui))
-                result = r or "Done."
-
-            elif name == "email_action":
-                r = await loop.run_in_executor(None, lambda: email_action(parameters=args, player=self.ui))
-                result = r or "Done."
-
-            elif name == "calendar_action":
-                r = await loop.run_in_executor(None, lambda: calendar_action(parameters=args, player=self.ui))
-                result = r or "Done."
-
-            elif name == "memory_manager":
-                from memory.memory_manager import memory_manager_action
-                r = await loop.run_in_executor(None, lambda: memory_manager_action(parameters=args, player=self.ui))
-                result = r or "Done."
-
             elif name == "shutdown_jarvis":
                 self.ui.write_log("SYS: Shutdown requested.")
                 self.speak("Goodbye, sir.")
@@ -905,7 +769,6 @@ class JarvisLive:
                             full_in = " ".join(in_buf).strip()
                             if full_in:
                                 self.ui.write_log(f"You: {full_in}")
-                                _auto_extract_memory(full_in)
                             in_buf = []
 
                             full_out = " ".join(out_buf).strip()
@@ -1016,6 +879,13 @@ def main():
 
     threading.Thread(target=runner, daemon=True).start()
     ui.root.mainloop()
+
+# Verifica atualizações ao iniciar
+try:
+    from updater import check_and_update
+    check_and_update(silent=True)
+except Exception:
+    pass
 
 if __name__ == "__main__":
     main()
